@@ -106,7 +106,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <strong>Demo Login:</strong><br>
       Kaprodi: <code>198501012010011001</code> / <code>password</code><br>
       Admin: <code>199203152015012002</code> / <code>password</code><br>
-      Peminjam: <code>20210001</code> (tanpa password)
+      Peminjam: <code>123</code> (tanpa password)
     </div>
   </div>
 </div>

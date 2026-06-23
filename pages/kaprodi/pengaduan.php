@@ -16,6 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'], $_POST['id'
 
 $filter_tipe = $_GET['tipe'] ?? '';
 $filter_status = $_GET['status'] ?? '';
+$q      = trim($_GET['q'] ?? '');
 $where_parts = [];
 if ($filter_tipe) {
     $ft = $conn->real_escape_string($filter_tipe);
@@ -24,6 +25,14 @@ if ($filter_tipe) {
 if ($filter_status) {
     $fs = $conn->real_escape_string($filter_status);
     $where_parts[] = "fpm.status_pengaduan = '$fs'";
+}
+if ($q) {
+    $esc = $conn->real_escape_string($q);
+    $where_parts[] = "(
+        u.nama LIKE '%$esc%' OR fpm.tipe_peminjaman LIKE '%$esc%' OR
+        COALESCE(b.namaBarang, r.namaRuangan) LIKE '%$esc%' OR fpm.deskripsi_masalah LIKE '%$esc%' OR
+        fpm.status_pengaduan LIKE '%$esc%' OR fpm.deskripsi_resolusi LIKE '%$esc%'
+    )";
 }
 $where_sql = $where_parts ? 'WHERE ' . implode(' AND ', $where_parts) : '';
 
@@ -46,10 +55,20 @@ require_once __DIR__ . '/../../includes/header.php';
 
 <h4 class="fw-bold mb-4"><i class="bi bi-exclamation-triangle me-2 text-danger"></i>Approval Pengaduan Masalah</h4>
 
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+  <form method="GET" class="flex-grow-1">
+    <div class="input-group input-group-sm" style="max-width:420px;">
+      <input type="search" name="q" class="form-control" placeholder="Cari pengaduan..."
+        value="<?= sanitize($q) ?>">
+      <button class="btn btn-outline-secondary" type="submit"><i class="bi bi-search"></i></button>
+    </div>
+  </form>
+</div>
+
 <div class="mb-3 d-flex gap-2 flex-wrap align-items-center">
   <span class="text-muted small me-1">Tipe:</span>
   <?php foreach ([''=>'Semua','Barang'=>'Barang','Ruangan'=>'Ruangan'] as $k=>$v): ?>
-  <a href="?tipe=<?= $k ?>&status=<?= $filter_status ?>"
+  <a href="?tipe=<?= $k ?>&status=<?= $filter_status ?>&q=<?= urlencode($q) ?>"
      class="btn btn-sm <?= $filter_tipe === $k ? 'btn-primary' : 'btn-outline-secondary' ?>">
     <?= $v ?>
   </a>
@@ -57,7 +76,7 @@ require_once __DIR__ . '/../../includes/header.php';
 
   <span class="text-muted small ms-3 me-1">Status:</span>
   <?php foreach ([''=>'Semua','Waiting'=>'Waiting','Approved'=>'Approved','Deny'=>'Deny'] as $k=>$v): ?>
-  <a href="?tipe=<?= $filter_tipe ?>&status=<?= $k ?>"
+  <a href="?tipe=<?= $filter_tipe ?>&status=<?= $k ?>&q=<?= urlencode($q) ?>"
      class="btn btn-sm <?= $filter_status === $k ? 'btn-secondary' : 'btn-outline-secondary' ?>">
     <?= $v ?>
   </a>

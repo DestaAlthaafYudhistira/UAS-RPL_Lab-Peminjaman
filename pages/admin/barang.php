@@ -45,11 +45,20 @@ if (isset($_GET['del'])) {
 }
 
 $q = trim($_GET['q'] ?? '');
-$where = '';
+$id_type = $_GET['id_type'] ?? '';
+$where_parts = [];
 if ($q) {
     $esc = $conn->real_escape_string($q);
-    $where = "WHERE b.namaBarang LIKE '%$esc%' OR b.SN LIKE '%$esc%' OR t.nama LIKE '%$esc%' OR b.qty LIKE '%$esc%' OR b.status_barang LIKE '%$esc%'";
+    $where_parts[] = "(
+        b.namaBarang LIKE '%$esc%' OR b.SN LIKE '%$esc%' OR t.nama LIKE '%$esc%' OR
+        b.qty LIKE '%$esc%' OR b.status_barang LIKE '%$esc%'
+    )";
 }
+if ($id_type !== '') {
+    $type_id = (int)$id_type;
+    $where_parts[] = "b.id_type = $type_id";
+}
+$where = $where_parts ? 'WHERE ' . implode(' AND ', $where_parts) : '';
 
 $barangList = $conn->query("SELECT b.*, t.nama AS tipe FROM Barang b LEFT JOIN TypeBarang t ON t.id=b.id_type $where ORDER BY b.namaBarang");
 $typeList   = $conn->query("SELECT * FROM TypeBarang ORDER BY nama");
@@ -60,9 +69,23 @@ $pageTitle = 'Data Barang';
 require_once __DIR__ . '/../../includes/header.php';
 ?>
 
-<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-  <form method="GET" class="flex-grow-1">
-    <div class="input-group input-group-sm" style="max-width:420px;">
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h4 class="fw-bold mb-0"><i class="bi bi-box-seam me-2 text-primary"></i>Data Barang</h4>
+</div>
+
+<div class="d-flex justify-content-between align-items-start mb-3 flex-wrap gap-2">
+  <form method="GET" class="d-flex flex-column gap-2 flex-grow-1">
+    <div class="input-group input-group-sm" style="width:100%; max-width:420px;">
+      <select name="id_type" class="form-select" onchange="this.form.submit()">
+        <option value="">Semua Tipe</option>
+        <?php foreach ($types as $t): ?>
+        <option value="<?= $t['id'] ?>" <?= $id_type === (string)$t['id'] ? 'selected' : '' ?> >
+          <?= sanitize($t['nama']) ?>
+        </option>
+        <?php endforeach; ?>
+      </select>
+    </div>
+    <div class="input-group input-group-sm" style="width:100%; max-width:420px;">
       <input type="search" name="q" class="form-control" placeholder="Cari data barang..."
         value="<?= sanitize($q) ?>">
       <button class="btn btn-outline-secondary" type="submit"><i class="bi bi-search"></i></button>

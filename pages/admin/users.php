@@ -72,6 +72,9 @@ $list = $conn->query("SELECT * FROM users $where ORDER BY FIELD(role,'kaprodi','
 $pageTitle = 'Data Pengguna';
 require_once __DIR__ . '/../../includes/header.php';
 ?>
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h4 class="fw-bold mb-0"><i class="bi bi-people me-2 text-primary"></i>Data Pengguna</h4>
+</div>
 <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
   <form method="GET" class="flex-grow-1">
     <div class="input-group input-group-sm" style="max-width:420px;">

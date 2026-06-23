@@ -23,12 +23,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['act'] === 'edit') {
     $sn     = (int)$_POST['SN'];
     $status = $conn->real_escape_string($_POST['status_ruangan']);
     $setG   = '';
+
+    $conflict = $conn->query("SELECT id FROM ruangan WHERE SN=$sn AND id<>$id")->fetch_assoc();
+    if ($conflict) {
+        alert('Gagal memperbarui: kode ruangan sudah digunakan oleh ruangan lain.', 'danger');
+        redirect('pages/admin/ruangan.php');
+    }
+
     if (!empty($_FILES['gambar']['name'])) {
         $g = uploadFile($_FILES['gambar'], 'ruangan');
         if ($g) $setG = ", gambar='" . $conn->real_escape_string($g) . "'";
     }
-    $conn->query("UPDATE ruangan SET namaRuangan='$nama',SN=$sn,status_ruangan='$status'$setG WHERE id=$id");
-    alert('Ruangan berhasil diperbarui.');
+
+    $ok = $conn->query("UPDATE ruangan SET namaRuangan='$nama',SN=$sn,status_ruangan='$status'$setG WHERE id=$id");
+    alert($ok ? 'Ruangan berhasil diperbarui.' : 'Gagal memperbarui ruangan.', $ok ? 'success' : 'danger');
     redirect('pages/admin/ruangan.php');
 }
 
@@ -50,6 +58,10 @@ $list = $conn->query("SELECT * FROM ruangan $where ORDER BY namaRuangan");
 $pageTitle = 'Data Ruangan';
 require_once __DIR__ . '/../../includes/header.php';
 ?>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h4 class="fw-bold mb-0"><i class="bi bi-door-open me-2 text-success"></i>Data Ruangan</h4>
+</div>
 
 <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
   <form method="GET" class="flex-grow-1">

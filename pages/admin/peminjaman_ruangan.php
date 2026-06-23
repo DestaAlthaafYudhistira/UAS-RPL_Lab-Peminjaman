@@ -48,6 +48,10 @@ $pageTitle = 'Kelola Peminjaman Ruangan';
 require_once __DIR__ . '/../../includes/header.php';
 ?>
 
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h4 class="fw-bold mb-0"><i class="bi bi-door-open me-2 text-success"></i>Kelola Peminjaman Ruangan</h4>
+</div>
+
 <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
   <form method="GET" class="d-flex align-items-center gap-2 flex-grow-1">
     <input type="hidden" name="status" value="<?= sanitize($filter) ?>">

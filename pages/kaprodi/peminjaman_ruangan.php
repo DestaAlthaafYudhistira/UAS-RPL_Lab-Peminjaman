@@ -18,7 +18,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 }
 
 $filter = $_GET['status'] ?? '';
-$where  = $filter ? "WHERE fpr.status_approval='$filter'" : '';
+$q      = trim($_GET['q'] ?? '');
+$where_parts = [];
+if ($filter) {
+  $where_parts[] = "fpr.status_approval='$filter'";
+}
+if ($q) {
+  $esc = $conn->real_escape_string($q);
+  $where_parts[] = "(
+    fpr.nama LIKE '%$esc%' OR fpr.nomor_identitas LIKE '%$esc%' OR fpr.jenis_identitas LIKE '%$esc%' OR
+    fpr.phone LIKE '%$esc%' OR r.namaRuangan LIKE '%$esc%' OR
+    fpr.keterangan LIKE '%$esc%' OR fpr.status_approval LIKE '%$esc%'
+  )";
+}
+$where = $where_parts ? 'WHERE ' . implode(' AND ', $where_parts) : '';
 $list   = $conn->query("
     SELECT fpr.*, r.namaRuangan FROM form_peminjamanRuangan fpr
     JOIN ruangan r ON r.id=fpr.id_ruangan
@@ -35,17 +48,49 @@ require_once __DIR__ . '/../../includes/header.php';
 
 <h4 class="fw-bold mb-4"><i class="bi bi-door-open me-2 text-success"></i>Peminjaman Ruangan</h4>
 
-<div class="row g-3 mb-4">
-  <div class="col-6 col-md-3"><div class="card text-center p-3"><div class="fw-bold fs-4 text-primary"><?= $total ?></div><small class="text-muted">Total</small></div></div>
-  <div class="col-6 col-md-3"><div class="card text-center p-3"><div class="fw-bold fs-4 text-warning"><?= $waiting ?></div><small class="text-muted">Waiting</small></div></div>
-  <div class="col-6 col-md-3"><div class="card text-center p-3"><div class="fw-bold fs-4 text-success"><?= $approved ?></div><small class="text-muted">Approved</small></div></div>
-  <div class="col-6 col-md-3"><div class="card text-center p-3"><div class="fw-bold fs-4 text-danger"><?= $deny ?></div><small class="text-muted">Deny</small></div></div>
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+  <form method="GET" class="flex-grow-1">
+    <div class="input-group input-group-sm" style="max-width:420px;">
+      <input type="search" name="q" class="form-control" placeholder="Cari peminjaman..."
+        value="<?= sanitize($q) ?>">
+      <button class="btn btn-outline-secondary" type="submit"><i class="bi bi-search"></i></button>
+    </div>
+  </form>
+  <div class="d-flex gap-2 flex-wrap">
+    <?php foreach ([''=>'Semua','Waiting'=>'Waiting','Approved'=>'Approved','Deny'=>'Deny'] as $k=>$v): ?>
+    <a href="?status=<?= $k ?>&q=<?= urlencode($q) ?>"
+       class="btn btn-sm <?= $filter === $k ? 'btn-success' : 'btn-outline-secondary' ?>">
+      <?= $v ?>
+    </a>
+    <?php endforeach; ?>
+  </div>
 </div>
 
-<div class="mb-3 d-flex gap-2 flex-wrap">
-  <?php foreach ([''=>'Semua','Waiting'=>'Waiting','Approved'=>'Approved','Deny'=>'Deny'] as $k=>$v): ?>
-  <a href="?status=<?= $k ?>" class="btn btn-sm <?= $filter===$k ? 'btn-success' : 'btn-outline-secondary' ?>"><?= $v ?></a>
-  <?php endforeach; ?>
+<div class="row g-3 mb-4">
+  <div class="col-6 col-md-3">
+    <div class="card text-center p-3">
+      <div class="fw-bold fs-4 text-primary"><?= $total ?></div>
+      <small class="text-muted">Total</small>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card text-center p-3">
+      <div class="fw-bold fs-4 text-warning"><?= $waiting ?></div>
+      <small class="text-muted">Waiting</small>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card text-center p-3">
+      <div class="fw-bold fs-4 text-success"><?= $approved ?></div>
+      <small class="text-muted">Approved</small>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card text-center p-3">
+      <div class="fw-bold fs-4 text-danger"><?= $deny ?></div>
+      <small class="text-muted">Deny</small>
+    </div>
+  </div>
 </div>
 
 <div class="card">
